@@ -5,13 +5,20 @@ import { useSession } from "../../../context/ctx";
 import { ScrollView, TextInput } from "react-native-gesture-handler";
 import { FontAwesome6 } from "@expo/vector-icons";
 
-export default function Index() {
-  const { signOut, adminToken, userToken } = useSession();
+export default function Search() {
+  const { signOut } = useSession();
   const colorScheme = useColorScheme();
   const theme = colorScheme === "dark" ? Colors.dark : Colors.light;
 
   return (
-    <ScrollView style={{backgroundColor: theme.background}}>
+    <View
+      style={{
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: theme.background,
+      }}
+    >
       <View style={styles.searchContainer}>
         <TextInput
           placeholder="Search..."
@@ -29,32 +36,10 @@ export default function Index() {
           />
         </View>
       </View>
-
-      <View style={styles.dueDate}>
-        {/* <Text style={styles.dueDateText}>Upcoming due date:</Text> */}
-        <Text style={styles.dueDateText}>You have no upcoming due dates</Text>
-      </View>
-
-      <Text style={styles.title}>New arrivals!</Text>
-      <ScrollView horizontal={true} style={styles.bookContainer}>
-        <View style={styles.book}></View>
-        <View style={styles.book}></View>
-        <View style={styles.book}></View>
+      <ScrollView>
         <View style={styles.book}></View>
       </ScrollView>
-
-      <Text style={styles.title}>Current Loans</Text>
-      <ScrollView horizontal={true} style={styles.bookContainer}>
-        <View style={styles.book}></View>
-        <View style={styles.book}></View>
-        <View style={styles.book}></View>
-        <View style={styles.book}></View>
-      </ScrollView>
-
-
-
-    
-    </ScrollView>
+    </View>
   );
 }
 
@@ -105,21 +90,21 @@ const styles = StyleSheet.create({
     marginLeft: 15,
     marginBottom: 15,
   },
-  book:{
+  book: {
     width: 200,
     height: 300,
     backgroundColor: "gray",
     marginRight: 15,
     borderRadius: 10,
   },
-  title:{
+  title: {
     fontSize: 24,
     fontWeight: "bold",
     color: "#A33B20",
     marginLeft: 15,
     marginVertical: 15,
   },
-  dueDate:{
+  dueDate: {
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
@@ -130,7 +115,7 @@ const styles = StyleSheet.create({
     padding: 20,
     height: 150,
   },
-  dueDateText:{
+  dueDateText: {
     color: "white",
     fontSize: 24,
     marginHorizontal: 10,

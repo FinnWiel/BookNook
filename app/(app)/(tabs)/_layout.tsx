@@ -28,13 +28,15 @@ export default function AppLayout() {
         tabBarActiveTintColor: "#A33B20",
         tabBarInactiveTintColor: '#1E2D2F',
         tabBarStyle: {
-          backgroundColor: "white",
-          height: 70,
+          backgroundColor: theme.background,
+          borderTopWidth: 0,
+          height: 60,
         },
         tabBarItemStyle: {
           marginVertical: 5,
+          
         },tabBarLabelStyle: {
-          color: "#1E2D2F",
+
           marginBottom: 5,
         }
       }}
@@ -46,6 +48,16 @@ export default function AppLayout() {
           headerShown: false,
           tabBarIcon: ({ color }) => (
             <FontAwesome size={28} name="home" color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="search"
+        options={{
+          title: "Search",
+          headerShown: false,
+          tabBarIcon: ({ color }) => (
+            <FontAwesome size={28} name="search" color={color} />
           ),
         }}
       />
@@ -69,6 +81,7 @@ export default function AppLayout() {
           ),
         }}
       />
+      
     </Tabs>
   );
 }
