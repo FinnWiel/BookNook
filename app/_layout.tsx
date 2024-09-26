@@ -31,13 +31,16 @@ export default function RootLayout() {
     return null;
   }
 
+  const theme = colorScheme === 'dark' ? DarkTheme : DefaultTheme;
+
   return (
     <SessionProvider>
-      {/* <Slot></Slot> */}
-      <Stack screenOptions={{ headerShown: false}}>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false}} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
+      <ThemeProvider value={theme}>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(app)" options={{ headerShown: false }} />
+          <Stack.Screen name="+not-found" />
+        </Stack>
+      </ThemeProvider>
     </SessionProvider>
   );
 }

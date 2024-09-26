@@ -1,45 +1,82 @@
-import { Text } from "react-native";
+import { ActivityIndicator, Text, StyleSheet, View } from "react-native";
 import { Redirect, Stack, Tabs, useRouter } from "expo-router";
-
+import { useColorScheme } from "react-native";
+import { Colors } from "@/constants/Colors";
 import { useSession } from "../../../context/ctx";
 import { FontAwesome } from "@expo/vector-icons";
 
 export default function AppLayout() {
   const { session, isLoading } = useSession();
-  const router = useRouter();
+  const colorScheme = useColorScheme();
+  const theme = colorScheme === 'dark' ? Colors.dark : Colors.light
 
-  // You can keep the splash screen open, or render a loading screen like we do here.
   if (isLoading) {
-    return <Text>Loading...</Text>;
+    return (
+      <View style={[styles.loadingContainer, {backgroundColor: theme.background}]}>
+        <ActivityIndicator size="large" color={theme.primary} /> {/* You can customize the color */}
+      </View>
+    );
   }
 
-  // Only require authentication within the (app) group's layout as users
-  // need to be able to access the (auth) group and sign in again.
   if (!session) {
-    // On web, static rendering will stop here as the user is not authenticated
-    // in the headless Node process that the pages are rendered in.
-    return <Redirect href="../landing"/>;
+    return <Redirect href="../landing" />;
   }
 
-  // This layout can be deferred because it's not the root layout.
   return (
-    <Tabs screenOptions={{ tabBarActiveTintColor: 'blue' }}>
+    <Tabs
+      screenOptions={{
+        tabBarActiveTintColor: "#A33B20",
+        tabBarInactiveTintColor: '#1E2D2F',
+        tabBarStyle: {
+          backgroundColor: "white",
+          height: 70,
+        },
+        tabBarItemStyle: {
+          marginVertical: 5,
+        },tabBarLabelStyle: {
+          color: "#1E2D2F",
+          marginBottom: 5,
+        }
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: "Home",
           headerShown: false,
-          tabBarIcon: ({ color }) => <FontAwesome size={28} name="home" color={color} />,
+          tabBarIcon: ({ color }) => (
+            <FontAwesome size={28} name="home" color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="loans"
         options={{
-          title: 'Loans',
+          title: "Loans",
           headerShown: false,
-          tabBarIcon: ({ color }) => <FontAwesome size={28} name="cog" color={color} />,
+          tabBarIcon: ({ color }) => (
+            <FontAwesome size={28} name="book" color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "Profile",
+          headerShown: false,
+          tabBarIcon: ({ color }) => (
+            <FontAwesome size={28} name="user" color={color} />
+          ),
         }}
       />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});
