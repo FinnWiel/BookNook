@@ -7,6 +7,7 @@ import { API_BASE_URL } from '../constants/Api'; // Import the base URL
 const AuthContext = createContext<{
   signIn: (username: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
+  validateToken: () => Promise<boolean>;
   session?: string | null;
   isLoading: boolean;
   adminToken: string | null; // Global variable for admin token
@@ -16,6 +17,7 @@ const AuthContext = createContext<{
 }>({
   signIn: async () => Promise.resolve(),
   signOut: async () => Promise.resolve(),
+  validateToken: async () => Promise.resolve(false),
   session: null,
   isLoading: false,
   adminToken: null,
@@ -43,7 +45,6 @@ export function SessionProvider({ children }: PropsWithChildren) {
   const [userToken, setUserToken] = useState<string | null>(null); // Initialize userToken 
   const [userId, setUserId] = useStorageState('user_id');
   const router = useRouter();
-
 
   const signIn = async (username: string, password: string) => {
     setAuthLoading(true);
@@ -101,11 +102,28 @@ export function SessionProvider({ children }: PropsWithChildren) {
     }
   };
 
+  const validateToken = async (): Promise<boolean> => {
+    if (!session) {
+      return false;
+    }
+    
+    try {
+      const response = await axios.post(`${API_BASE_URL}/validate-toklen`, {
+        token: session, // Using the session token for validation
+      });
+      return response.data.valid; // Assuming the response has a 'valid' field
+    } catch (error) {
+      console.error('Error during token validation:', error);
+      return false;
+    }
+  };
+
   return (
     <AuthContext.Provider
     value={{
       signIn,
       signOut,
+      validateToken,
       session,
       isLoading: isLoading || authLoading,
       adminToken,

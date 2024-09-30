@@ -4,19 +4,25 @@ import { useColorScheme } from "react-native";
 import { Colors } from "@/constants/Colors";
 import { useSession } from "../../../context/ctx";
 import { FontAwesome } from "@expo/vector-icons";
+import axios from "axios";
+import { API_BASE_URL } from "@/constants/Api";
 
 export default function AppLayout() {
-  const { session, isLoading } = useSession();
+  const { validateToken, session, isLoading, } = useSession();
   const colorScheme = useColorScheme();
-  const theme = colorScheme === 'dark' ? Colors.dark : Colors.light
+  const theme = colorScheme === "dark" ? Colors.dark : Colors.light;
 
   if (isLoading) {
     return (
-      <View style={[styles.loadingContainer, {backgroundColor: theme.background}]}>
-        <ActivityIndicator size="large" color={theme.primary} /> {/* You can customize the color */}
+      <View
+        style={[styles.loadingContainer, { backgroundColor: theme.background }]}
+      >
+        <ActivityIndicator size="large" color={theme.primary} />{" "}
       </View>
     );
   }
+
+  
 
   if (!session) {
     return <Redirect href="../landing" />;
@@ -26,7 +32,7 @@ export default function AppLayout() {
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: "#A33B20",
-        tabBarInactiveTintColor: '#1E2D2F',
+        tabBarInactiveTintColor: "#1E2D2F",
         tabBarStyle: {
           backgroundColor: theme.background,
           borderTopWidth: 0,
@@ -34,11 +40,10 @@ export default function AppLayout() {
         },
         tabBarItemStyle: {
           marginVertical: 5,
-          
-        },tabBarLabelStyle: {
-
+        },
+        tabBarLabelStyle: {
           marginBottom: 5,
-        }
+        },
       }}
     >
       <Tabs.Screen
@@ -81,7 +86,6 @@ export default function AppLayout() {
           ),
         }}
       />
-      
     </Tabs>
   );
 }
@@ -89,7 +93,7 @@ export default function AppLayout() {
 const styles = StyleSheet.create({
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

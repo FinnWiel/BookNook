@@ -4,14 +4,55 @@ import { Colors } from "@/constants/Colors";
 import { useSession } from "../../../context/ctx";
 import { ScrollView, TextInput } from "react-native-gesture-handler";
 import { FontAwesome6 } from "@expo/vector-icons";
+import Book from "@/components/Book";
+import { useEffect, useState } from "react";
+import { API_BASE_URL } from "@/constants/Api";
+
+interface Genre {
+  id: number;
+  name: string;
+}
+
+interface Book {
+  id: number;
+  title: string;
+  author: string;
+  publicationDate: string;
+  totalAmount: number;
+  currentAmount: number;
+  genres: Genre[];
+}
 
 export default function Index() {
   const { signOut, adminToken, userToken } = useSession();
   const colorScheme = useColorScheme();
   const theme = colorScheme === "dark" ? Colors.dark : Colors.light;
+  const { session } = useSession();
+
+  const [books, setBooks] = useState<Book[]>([]);
+
+  // Fetch the latest books from the API when the component mounts
+  useEffect(() => {
+    fetchLatestBooks();
+  }, []);
+
+  const fetchLatestBooks = async () => {
+    try {
+      const response = await fetch("http://localhost:8000/api/v1/books?latest", {
+        method: 'GET', // Specify the request method
+        headers: {
+          'Authorization': `Bearer ${session}`, // Include the Bearer token
+        },
+      });
+      const data = await response.json();
+      setBooks(data.data); // Use `data.data` to get the array of books
+    } catch (error) {
+      console.error('Error fetching latest books:', error);
+    }
+  };
 
   return (
-    <ScrollView style={{backgroundColor: theme.background}}>
+    <ScrollView style={{ backgroundColor: theme.background }}>
       <View style={styles.searchContainer}>
         <TextInput
           placeholder="Search..."
@@ -37,23 +78,20 @@ export default function Index() {
 
       <Text style={styles.title}>New arrivals!</Text>
       <ScrollView horizontal={true} style={styles.bookContainer}>
-        <View style={styles.book}></View>
-        <View style={styles.book}></View>
-        <View style={styles.book}></View>
-        <View style={styles.book}></View>
+      {books.map((book, index) => (
+        <Book title={book.title} author={book.author} key={index}/>
+      ))}
       </ScrollView>
 
       <Text style={styles.title}>Current Loans</Text>
       <ScrollView horizontal={true} style={styles.bookContainer}>
-        <View style={styles.book}></View>
-        <View style={styles.book}></View>
-        <View style={styles.book}></View>
-        <View style={styles.book}></View>
+        <Book title="The Great Gatsby" author="F. Scott Fitzgerald" />
+        <Book title="The Great Gatsby" author="F. Scott Fitzgerald" />
+        <Book title="The Great Gatsby" author="F. Scott Fitzgerald" />
+        <Book title="The Great Gatsby" author="F. Scott Fitzgerald" />
+        <Book title="The Great Gatsby" author="F. Scott Fitzgerald" />
+        <Book title="The Great Gatsby" author="F. Scott Fitzgerald" />
       </ScrollView>
-
-
-
-    
     </ScrollView>
   );
 }
@@ -105,21 +143,21 @@ const styles = StyleSheet.create({
     marginLeft: 15,
     marginBottom: 15,
   },
-  book:{
+  book: {
     width: 200,
     height: 300,
     backgroundColor: "gray",
     marginRight: 15,
     borderRadius: 10,
   },
-  title:{
+  title: {
     fontSize: 24,
     fontWeight: "bold",
     color: "#A33B20",
     marginLeft: 15,
     marginVertical: 15,
   },
-  dueDate:{
+  dueDate: {
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
@@ -130,7 +168,7 @@ const styles = StyleSheet.create({
     padding: 20,
     height: 150,
   },
-  dueDateText:{
+  dueDateText: {
     color: "white",
     fontSize: 24,
     marginHorizontal: 10,

@@ -4,6 +4,7 @@ import { Colors } from "@/constants/Colors";
 import { useSession } from "../../../context/ctx";
 import { ScrollView, TextInput } from "react-native-gesture-handler";
 import { FontAwesome6 } from "@expo/vector-icons";
+import Book from "@/components/Book";
 
 export default function Search() {
   const { signOut } = useSession();
@@ -36,8 +37,17 @@ export default function Search() {
           />
         </View>
       </View>
-      <ScrollView>
-        <View style={styles.book}></View>
+      <ScrollView contentContainerStyle={styles.results} pagingEnabled={true} persistentScrollbar={true}>
+        <Book title="The Great Gatsby" author="F. Scott Fitzgerald" />
+        <Book title="The Great Gatsby" author="F. Scott Fitzgerald" />
+        <Book title="The Great Gatsby" author="F. Scott Fitzgerald" />
+        <Book title="The Great Gatsby" author="F. Scott Fitzgerald" />
+        <Book title="The Great Gatsby" author="F. Scott Fitzgerald" />
+        <Book title="The Great Gatsby" author="F. Scott Fitzgerald" />
+        <Book title="The Great Gatsby" author="F. Scott Fitzgerald" />
+        <Book title="The Great Gatsby" author="F. Scott Fitzgerald" />
+        <Book title="The Great Gatsby" author="F. Scott Fitzgerald" />
+        <Book title="The Great Gatsby" author="F. Scott Fitzgerald" />
       </ScrollView>
     </View>
   );
@@ -90,13 +100,6 @@ const styles = StyleSheet.create({
     marginLeft: 15,
     marginBottom: 15,
   },
-  book: {
-    width: 200,
-    height: 300,
-    backgroundColor: "gray",
-    marginRight: 15,
-    borderRadius: 10,
-  },
   title: {
     fontSize: 24,
     fontWeight: "bold",
@@ -120,5 +123,12 @@ const styles = StyleSheet.create({
     fontSize: 24,
     marginHorizontal: 10,
     fontWeight: "bold",
+  },
+  results: {
+    display: "flex",
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    width: "100%",
   },
 });
