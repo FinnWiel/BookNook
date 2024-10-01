@@ -1,56 +1,72 @@
-import React from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, GestureResponderEvent } from 'react-native';
+import { useRouter } from "expo-router";
+import React from "react";
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+  GestureResponderEvent,
+} from "react-native";
 
 // Define the props interface
 interface BookProps {
-    title: string;
-    author: string;
-    coverImage?: any;
+  title: string;
+  author: string;
+  bookId: number;
+  coverImage?: any;
 }
 
-const defaultImage = require('@/assets/images/base_img.jpg'); // Adjust this path as needed
+const defaultImage = require("@/assets/images/base_img.jpg"); // Adjust this path as needed
 
-const Book: React.FC<BookProps> = ({ title, author, coverImage }) => {
-    return (
-        <TouchableOpacity style={styles.container}>
-            <Image source={coverImage || defaultImage} style={styles.image} />
-            <View style={styles.textContainer}>
-                <Text style={styles.title}>{title}</Text>
-                <Text style={styles.author}>{author}</Text>
-            </View>
-        </TouchableOpacity>
-    );
+const Book: React.FC<BookProps> = ({ title, author, coverImage, bookId }) => {
+  const router = useRouter(); // Initialize the router
+
+  // Function to handle navigation
+  const goToBook = () => {
+    router.push(`/book/${bookId}`); // Navigate to /book/[id]
+  };
+
+  return (
+    <TouchableOpacity style={styles.container} onPress={goToBook}>
+      <Image source={coverImage || defaultImage} style={styles.image} />
+      <View style={styles.textContainer}>
+        <Text style={styles.title}>{title}</Text>
+        <Text style={styles.author}>{author}</Text>
+      </View>
+    </TouchableOpacity>
+  );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        width: 180,
-        margin: 10,
-        borderColor: '#ccc',
-        borderRadius: 8,
-        overflow: 'hidden',
-        backgroundColor: '#fff',
-        elevation: 2, 
-        shadowColor: '#000', 
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-    },
-    image: {
-        width: '100%',
-        height: 220,
-    },
-    textContainer: {
-        padding: 8,
-    },
-    title: {
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    author: {
-        fontSize: 14,
-        color: '#666',
-    },
+  container: {
+    width: 180,
+    margin: 10,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    overflow: "hidden",
+    backgroundColor: "#fff",
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  image: {
+    width: "100%",
+    height: 220,
+  },
+  textContainer: {
+    padding: 8,
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  author: {
+    fontSize: 14,
+    color: "#666",
+  },
 });
 
 export default Book;

@@ -1,4 +1,4 @@
-import { Text, View, StyleSheet } from "react-native";
+import { Text, View, StyleSheet, ActivityIndicator } from "react-native";
 import { useColorScheme } from "react-native";
 import { Colors } from "@/constants/Colors";
 import { useSession } from "../../../context/ctx";
@@ -7,6 +7,7 @@ import { FontAwesome6 } from "@expo/vector-icons";
 import Book from "@/components/Book";
 import { useEffect, useState } from "react";
 import { API_BASE_URL } from "@/constants/Api";
+import axios from "axios";
 
 interface Genre {
   id: number;
@@ -23,33 +24,64 @@ interface Book {
   genres: Genre[];
 }
 
+interface Loan {
+  book: Book;
+  dueDate: string;
+  loanedAt: string;
+  returnedAt: string | null;
+}
+
+
 export default function Index() {
-  const { signOut, adminToken, userToken } = useSession();
+  const { signOut, adminToken, userToken, session, userId } = useSession();
   const colorScheme = useColorScheme();
   const theme = colorScheme === "dark" ? Colors.dark : Colors.light;
-  const { session } = useSession();
 
-  const [books, setBooks] = useState<Book[]>([]);
+  const [newBooks, setNewBooks] = useState<Book[]>([]);
+  const [loans, setLoans] = useState<Loan[]>([]);
+  const [loadingNew, setLoadingNew] = useState<boolean>(true); // Loading
+  const [loadingLoan, setLoadingLoan] = useState<boolean>(true); // Loading
 
   // Fetch the latest books from the API when the component mounts
   useEffect(() => {
     fetchLatestBooks();
+    fetchCurrentLoans();
   }, []);
 
   const fetchLatestBooks = async () => {
+    setLoadingNew(true);
     try {
-      const response = await fetch("http://localhost:8000/api/v1/books?latest", {
-        method: 'GET', // Specify the request method
-        headers: {
-          'Authorization': `Bearer ${session}`, // Include the Bearer token
-        },
-      });
-      const data = await response.json();
-      setBooks(data.data); // Use `data.data` to get the array of books
+        const response = await axios.get(API_BASE_URL + "books?latest", {
+            headers: {
+                Authorization: `Bearer ${session}`, // Include the Bearer token
+            },
+        });
+        
+        setNewBooks(response.data.data); // Use `response.data.data` to get the array of books
     } catch (error) {
-      console.error('Error fetching latest books:', error);
+        console.error("Error fetching latest books:", error);
+    } finally {
+        setLoadingNew(false); // Ensure loading state is reset in finally block
     }
-  };
+};
+
+const fetchCurrentLoans = async () => {
+    setLoadingLoan(true);
+    try {
+        const response = await axios.get(API_BASE_URL + `users/${userId}?includeCurrentLoans`, {
+            headers: {
+                Authorization: `Bearer ${session}`, // Include the Bearer token
+            },
+        });
+
+        setLoans(response.data.data.loans); // Use `data.data` to get the loans
+    } catch (error) {
+        console.error("Error fetching current loans:", error);
+    } finally {
+        setLoadingLoan(false); // Ensure loading state is reset in finally block
+    }
+};
+
 
   return (
     <ScrollView style={{ backgroundColor: theme.background }}>
@@ -72,26 +104,65 @@ export default function Index() {
       </View>
 
       <View style={styles.dueDate}>
-        {/* <Text style={styles.dueDateText}>Upcoming due date:</Text> */}
-        <Text style={styles.dueDateText}>You have no upcoming due dates</Text>
+        {loans.length > 0 ? (
+          <>
+            <Text style={styles.dueDates}>
+              Upcoming due date{loans.length > 1 ? "s" : ""}:
+            </Text>
+            {loans.map((loan, index) => (
+              <Text key={index} style={styles.dueDateText}>
+                {loan.dueDate}
+              </Text>
+            ))}
+          </>
+        ) : (
+          <Text style={styles.dueDateText}>No upcoming due dates</Text>
+        )}
       </View>
 
       <Text style={styles.title}>New arrivals!</Text>
-      <ScrollView horizontal={true} style={styles.bookContainer}>
-      {books.map((book, index) => (
-        <Book title={book.title} author={book.author} key={index}/>
-      ))}
-      </ScrollView>
+      {loadingNew ? ( // Show loading indicator while fetching data
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="white" />
+        </View>
+      ) : (
+        <ScrollView horizontal={true} style={styles.bookContainer}>
+          {newBooks.length > 0 ? (
+            newBooks.map((book, index) => (
+              <Book
+                title={book.title}
+                author={book.author}
+                key={index}
+                bookId={book.id}
+              />
+            ))
+          ) : (
+            <Text style={styles.noBooks}>No new arrivals.</Text>
+          )}
+        </ScrollView>
+      )}
 
       <Text style={styles.title}>Current Loans</Text>
-      <ScrollView horizontal={true} style={styles.bookContainer}>
-        <Book title="The Great Gatsby" author="F. Scott Fitzgerald" />
-        <Book title="The Great Gatsby" author="F. Scott Fitzgerald" />
-        <Book title="The Great Gatsby" author="F. Scott Fitzgerald" />
-        <Book title="The Great Gatsby" author="F. Scott Fitzgerald" />
-        <Book title="The Great Gatsby" author="F. Scott Fitzgerald" />
-        <Book title="The Great Gatsby" author="F. Scott Fitzgerald" />
-      </ScrollView>
+      {loadingLoan ? ( // Show loading indicator while fetching data
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="white" />
+        </View>
+      ) : (
+        <ScrollView horizontal={true} style={styles.bookContainer}>
+          {loans.length > 0 ? (
+            loans.map((book, index) => (
+              <Book
+                title={book.book.title}
+                author={book.book.author}
+                key={index}
+                bookId={book.book.id}
+              />
+            ))
+          ) : (
+            <Text style={styles.noBooks}>No current loans.</Text>
+          )}
+        </ScrollView>
+      )}
     </ScrollView>
   );
 }
@@ -101,6 +172,17 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "flex-start",
     alignItems: "flex-start",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "flex-start",
+    margin: 20,
+  },
+  loadingText: {
+    color: "white",
+    marginTop: 10,
+    fontSize: 16,
   },
   searchContainer: {
     width: "100%",
@@ -173,5 +255,17 @@ const styles = StyleSheet.create({
     fontSize: 24,
     marginHorizontal: 10,
     fontWeight: "bold",
+  },
+  noBooks: {
+    color: "white",
+    fontSize: 18,
+    fontStyle: "italic",
+    fontWeight: "100",
+  },
+  dueDates: {
+    color: "white",
+    fontSize: 24,
+    marginHorizontal: 10,
+    fontWeight: "100",
   },
 });

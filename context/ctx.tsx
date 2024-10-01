@@ -9,6 +9,7 @@ const AuthContext = createContext<{
   signOut: () => Promise<void>;
   validateToken: () => Promise<boolean>;
   session?: string | null;
+  userId: string | null;
   isLoading: boolean;
   adminToken: string | null; // Global variable for admin token
   userToken: string | null;   // Global variable for user token
@@ -19,6 +20,7 @@ const AuthContext = createContext<{
   signOut: async () => Promise.resolve(),
   validateToken: async () => Promise.resolve(false),
   session: null,
+  userId: null,
   isLoading: false,
   adminToken: null,
   userToken: null,
@@ -40,10 +42,10 @@ export function useSession() {
 
 export function SessionProvider({ children }: PropsWithChildren) {
   const [[isLoading, session], setSession] = useStorageState('session');
+  const [userId, setUserId] = useStorageState('userId');
   const [authLoading, setAuthLoading] = useState(false); 
   const [adminToken, setAdminToken] = useState<string | null>(null); // Initialize adminToken
   const [userToken, setUserToken] = useState<string | null>(null); // Initialize userToken 
-  const [userId, setUserId] = useStorageState('user_id');
   const router = useRouter();
 
   const signIn = async (username: string, password: string) => {
@@ -58,11 +60,11 @@ export function SessionProvider({ children }: PropsWithChildren) {
       
       // Assuming the API response contains the session token in response.data.token
       const token = response.data.admin_token || response.data.user_token;
-      const userId = response.data.user.id;
+      const user_id = response.data.user.id;
 
       if (token) {
         setSession(token);
-        setUserId(userId);
+        setUserId(user_id);
         // Set global tokens if they exist in the response
         setAdminToken(response.data.admin_token);
         setUserToken(response.data.user_token);
@@ -125,6 +127,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
       signOut,
       validateToken,
       session,
+      userId: userId[1],
       isLoading: isLoading || authLoading,
       adminToken,
       userToken,

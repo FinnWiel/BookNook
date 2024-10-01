@@ -5,7 +5,7 @@ import { useSession } from "../../../context/ctx";
 import { ScrollView, TextInput } from "react-native-gesture-handler";
 import { FontAwesome6 } from "@expo/vector-icons";
 
-export default function Loans() {
+export default function Reads() {
   const { signOut } = useSession();
   const colorScheme = useColorScheme();
   const theme = colorScheme === "dark" ? Colors.dark : Colors.light;

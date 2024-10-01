@@ -22,8 +22,6 @@ export default function AppLayout() {
     );
   }
 
-  
-
   if (!session) {
     return <Redirect href="../landing" />;
   }
@@ -67,9 +65,9 @@ export default function AppLayout() {
         }}
       />
       <Tabs.Screen
-        name="loans"
+        name="reads"
         options={{
-          title: "Loans",
+          title: "Reads",
           headerShown: false,
           tabBarIcon: ({ color }) => (
             <FontAwesome size={28} name="book" color={color} />
