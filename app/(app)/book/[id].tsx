@@ -1,13 +1,17 @@
-import { Text, View, StyleSheet, Image, TouchableOpacity, ActivityIndicator } from "react-native";
+import {
+  Text,
+  View,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
 import { useColorScheme } from "react-native";
 import { Colors } from "@/constants/Colors";
 import { useSession } from "../../../context/ctx";
 import { FontAwesome6 } from "@expo/vector-icons";
 import Book from "@/components/Book";
-import {
-  router,
-  useGlobalSearchParams,
-} from "expo-router";
+import { router, useGlobalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { API_BASE_URL } from "@/constants/Api";
 import axios from "axios";
@@ -35,29 +39,28 @@ export default function BookView() {
   const [book, setBook] = useState<Book>();
   const [genres, setGenres] = useState<Genre[]>([]);
   const { id } = useGlobalSearchParams();
-  const [loading, setLoading] = useState<boolean>(true); // Loading state
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     fetchBook();
   }, []);
 
   const fetchBook = async () => {
-    setLoading(true); // Set loading to true before fetching
+    setLoading(true);
     try {
       const response = await axios.get(`${API_BASE_URL}books/${id}`, {
         headers: {
-          Authorization: `Bearer ${session}`, // Include the Bearer token
+          Authorization: `Bearer ${session}`,
         },
       });
-  
-      // Axios automatically parses the JSON response
-      setBook(response.data.data); // Use `response.data.data` to get the book details
+
+      setBook(response.data.data);
       setGenres(response.data.data.genres);
     } catch (error) {
       console.error("Error fetching latest books:", error);
       router.back();
     } finally {
-      setLoading(false); // Set loading to false after fetching
+      setLoading(false);
     }
   };
 
@@ -82,27 +85,38 @@ export default function BookView() {
         <Text style={styles.backText}>Go back</Text>
       </TouchableOpacity>
 
-      {loading ? ( // Show loading indicator while fetching data
+      {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#A33B20" />
           <Text style={styles.loadingText}>Loading...</Text>
         </View>
       ) : (
-        <>
+        <View>
           <Image source={defaultImage} style={styles.image} />
           <View style={styles.bookInfo}>
-            <Text style={[styles.title, {color: theme.text}]}>{book?.title}</Text>
-            <Text style={[styles.author, {color: theme.text}]}>{book?.author}</Text>
-            <Text style={[styles.publication, {color: theme.text}]}>Published on: {book?.publicationDate}</Text>
+            <Text style={[styles.title, { color: theme.text }]}>
+              {book?.title || "Title"}
+            </Text>
+            <Text style={[styles.author, { color: theme.text }]}>
+              {book?.author || "Author"}
+            </Text>
+            <Text style={[styles.publication, { color: theme.text }]}>
+              Published on: {book?.publicationDate || "Unknown"}
+            </Text>
             <View style={styles.genresContainer}>
               {genres.map((genre, index) => (
-                <Text key={index} style={[styles.genre, {color: theme.text, borderColor: theme.text}]}>
-                  {genre.name}
+                <Text
+                  key={index}
+                  style={[
+                    styles.genre,
+                    { color: theme.text, borderColor: theme.text },
+                  ]}
+                >{genre.name || "Genre"}
                 </Text>
               ))}
             </View>
           </View>
-        </>
+        </View>
       )}
     </View>
   );
@@ -139,21 +153,17 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "white",
   },
   author: {
     fontSize: 18,
-    color: "white",
     fontStyle: "italic",
   },
   summary: {
     fontSize: 16,
-    color: "white",
     margin: 15,
   },
   publication: {
     fontSize: 16,
-    color: "white",
     marginVertical: 10,
   },
   genresContainer: {
@@ -166,8 +176,6 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
     borderWidth: 2,
     borderStyle: "solid",
-    borderColor: "white",
-    color: "white",
     paddingHorizontal: 20,
     paddingTop: 5,
     paddingBottom: 7,

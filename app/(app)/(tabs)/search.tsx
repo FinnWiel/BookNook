@@ -1,8 +1,7 @@
 import { Text, View, StyleSheet } from "react-native";
-import { useColorScheme } from "react-native";
+import { useColorScheme, ScrollView, TextInput } from "react-native";
 import { Colors } from "@/constants/Colors";
 import { useSession } from "../../../context/ctx";
-import { ScrollView, TextInput } from "react-native-gesture-handler";
 import { FontAwesome6 } from "@expo/vector-icons";
 import Book from "@/components/Book";
 
@@ -22,6 +21,7 @@ export default function Search() {
     >
       <View style={styles.searchContainer}>
         <TextInput
+          placeholderTextColor={theme.text}
           placeholder="Search..."
           style={[
             styles.searchBar,
@@ -33,21 +33,11 @@ export default function Search() {
             name="magnifying-glass"
             size={20}
             color={"white"}
-            style={[styles.loop, { position: "absolute", right: 20, top: 15 }]}
+            style={[{ position: "absolute", right: 20, top: 15 }]}
           />
         </View>
       </View>
       <ScrollView contentContainerStyle={styles.results} pagingEnabled={true} persistentScrollbar={true}>
-        <Book title="The Great Gatsby" author="F. Scott Fitzgerald" />
-        <Book title="The Great Gatsby" author="F. Scott Fitzgerald" />
-        <Book title="The Great Gatsby" author="F. Scott Fitzgerald" />
-        <Book title="The Great Gatsby" author="F. Scott Fitzgerald" />
-        <Book title="The Great Gatsby" author="F. Scott Fitzgerald" />
-        <Book title="The Great Gatsby" author="F. Scott Fitzgerald" />
-        <Book title="The Great Gatsby" author="F. Scott Fitzgerald" />
-        <Book title="The Great Gatsby" author="F. Scott Fitzgerald" />
-        <Book title="The Great Gatsby" author="F. Scott Fitzgerald" />
-        <Book title="The Great Gatsby" author="F. Scott Fitzgerald" />
       </ScrollView>
     </View>
   );
@@ -63,37 +53,28 @@ const styles = StyleSheet.create({
     width: "100%",
     display: "flex",
     flexDirection: "row",
-    alignItems: "center",
-    marginTop: 15,
+    marginTop: 35,
   },
   searchBar: {
     backgroundColor: "transparent",
     borderWidth: 2,
     borderColor: "white",
-    width: "90%",
+    width: "75%",
     height: 50,
     borderRadius: 10,
     margin: 15,
+    marginRight: 12,
     padding: 10,
     fontWeight: "bold",
   },
   searchIcon: {
-    width: "10%",
-    height: 80,
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    marginLeft: 15,
-    marginRight: -5,
-  },
-  loop: {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#A33B20",
-    width: "100%",
+    width: "15%",
     height: 50,
+    paddingTop: 10,
+    marginTop: 15,
     borderRadius: 10,
+    backgroundColor: "#A33B20",
+    textAlign: "center",
     cursor: "pointer",
   },
   bookContainer: {

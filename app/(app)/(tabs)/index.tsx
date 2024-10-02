@@ -1,8 +1,8 @@
-import { Text, View, StyleSheet, ActivityIndicator } from "react-native";
+import { Text, View, StyleSheet, ActivityIndicator, ScrollView, TextInput  } from "react-native";
 import { useColorScheme } from "react-native";
 import { Colors } from "@/constants/Colors";
 import { useSession } from "../../../context/ctx";
-import { ScrollView, TextInput } from "react-native-gesture-handler";
+// import { ScrollView, TextInput } from "react-native-gesture-handler";
 import { FontAwesome6 } from "@expo/vector-icons";
 import Book from "@/components/Book";
 import { useEffect, useState } from "react";
@@ -87,10 +87,11 @@ const fetchCurrentLoans = async () => {
     <ScrollView style={{ backgroundColor: theme.background }}>
       <View style={styles.searchContainer}>
         <TextInput
+          placeholderTextColor={theme.text}
           placeholder="Search..."
           style={[
             styles.searchBar,
-            { borderColor: theme.primary, color: theme.primary },
+            { borderColor: theme.primary, color: theme.text},
           ]}
         ></TextInput>
         <View style={styles.searchIcon}>
@@ -98,30 +99,30 @@ const fetchCurrentLoans = async () => {
             name="magnifying-glass"
             size={20}
             color={"white"}
-            style={[styles.loop, { position: "absolute", right: 20, top: 15 }]}
+            style={[{ position: "absolute", right: 20, top: 15 }]}
           />
         </View>
       </View>
 
       <View style={styles.dueDate}>
         {loans.length > 0 ? (
-          <>
+          <View>
             <Text style={styles.dueDates}>
               Upcoming due date{loans.length > 1 ? "s" : ""}:
             </Text>
             {loans.map((loan, index) => (
               <Text key={index} style={styles.dueDateText}>
-                {loan.dueDate}
+                {loan.dueDate || "No due date"}
               </Text>
             ))}
-          </>
+          </View>
         ) : (
-          <Text style={styles.dueDateText}>No upcoming due dates</Text>
+            <Text style={styles.dueDateText}>No upcoming due dates</Text>
         )}
       </View>
 
       <Text style={styles.title}>New arrivals!</Text>
-      {loadingNew ? ( // Show loading indicator while fetching data
+      {loadingNew ? ( 
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="white" />
         </View>
@@ -130,20 +131,20 @@ const fetchCurrentLoans = async () => {
           {newBooks.length > 0 ? (
             newBooks.map((book, index) => (
               <Book
-                title={book.title}
-                author={book.author}
+                title={book.title || ""}
+                author={book.author || ""}
                 key={index}
-                bookId={book.id}
+                bookId={book.id || 0}
               />
             ))
           ) : (
-            <Text style={styles.noBooks}>No new arrivals.</Text>
+              <Text style={styles.noBooks}>No new arrivals.</Text>
           )}
         </ScrollView>
       )}
 
       <Text style={styles.title}>Current Loans</Text>
-      {loadingLoan ? ( // Show loading indicator while fetching data
+      {loadingLoan ? ( 
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="white" />
         </View>
@@ -152,14 +153,14 @@ const fetchCurrentLoans = async () => {
           {loans.length > 0 ? (
             loans.map((book, index) => (
               <Book
-                title={book.book.title}
-                author={book.book.author}
+                title={book.book.title || "Title"}
+                author={book.book.author || "Author"}
                 key={index}
-                bookId={book.book.id}
+                bookId={book.book.id || 0}
               />
             ))
           ) : (
-            <Text style={styles.noBooks}>No current loans.</Text>
+              <Text style={styles.noBooks}>No current loans.</Text>
           )}
         </ScrollView>
       )}
@@ -188,37 +189,28 @@ const styles = StyleSheet.create({
     width: "100%",
     display: "flex",
     flexDirection: "row",
-    alignItems: "center",
-    marginTop: 15,
+    marginTop: 35,
   },
   searchBar: {
     backgroundColor: "transparent",
     borderWidth: 2,
     borderColor: "white",
-    width: "90%",
+    width: "75%",
     height: 50,
     borderRadius: 10,
     margin: 15,
+    marginRight: 12,
     padding: 10,
     fontWeight: "bold",
   },
   searchIcon: {
-    width: "10%",
-    height: 80,
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    marginLeft: 15,
-    marginRight: -5,
-  },
-  loop: {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#A33B20",
-    width: "100%",
+    width: "15%",
     height: 50,
+    paddingTop: 10,
+    marginTop: 15,
     borderRadius: 10,
+    backgroundColor: "#A33B20",
+    textAlign: "center",
     cursor: "pointer",
   },
   bookContainer: {
@@ -242,8 +234,6 @@ const styles = StyleSheet.create({
   dueDate: {
     display: "flex",
     flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
     margin: 15,
     backgroundColor: "#A33B20",
     borderRadius: 10,

@@ -22,7 +22,6 @@ export default function Landing() {
         />
         <Text style={styles.logoText}>BookNook</Text>
       </View>
-
       <View style={styles.textContainer}>
         <Text style={styles.title}>Welcome,</Text>
         <Text style={styles.info}>
@@ -100,7 +99,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "white",
     margin: 10,
-    // backgroundColor: theme.primary,
     borderRadius: 100,
     fontWeight: "bold",
     fontSize: 18,

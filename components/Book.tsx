@@ -6,7 +6,6 @@ import {
   Image,
   StyleSheet,
   TouchableOpacity,
-  GestureResponderEvent,
 } from "react-native";
 
 // Define the props interface
@@ -17,14 +16,13 @@ interface BookProps {
   coverImage?: any;
 }
 
-const defaultImage = require("@/assets/images/base_img.jpg"); // Adjust this path as needed
+const defaultImage = require("@/assets/images/base_img.jpg");
 
 const Book: React.FC<BookProps> = ({ title, author, coverImage, bookId }) => {
-  const router = useRouter(); // Initialize the router
+  const router = useRouter(); 
 
-  // Function to handle navigation
   const goToBook = () => {
-    router.push(`/book/${bookId}`); // Navigate to /book/[id]
+    router.push(`/book/${bookId}`); 
   };
 
   return (
@@ -36,7 +34,7 @@ const Book: React.FC<BookProps> = ({ title, author, coverImage, bookId }) => {
       </View>
     </TouchableOpacity>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {

@@ -1,8 +1,7 @@
 import { Text, View, StyleSheet } from "react-native";
-import { useColorScheme } from "react-native";
+import { useColorScheme, ScrollView, TextInput } from "react-native";
 import { Colors } from "@/constants/Colors";
 import { useSession } from "../../../context/ctx";
-import { ScrollView, TextInput } from "react-native-gesture-handler";
 import { FontAwesome6 } from "@expo/vector-icons";
 
 export default function Reads() {
@@ -23,20 +22,10 @@ export default function Reads() {
         Your reading list.
       </Text>
       <ScrollView contentContainerStyle={styles.results} pagingEnabled={true} persistentScrollbar={true}>
-        <View style={styles.book}></View>
-        <View style={styles.book}></View>
-        <View style={styles.book}></View>
-        <View style={styles.book}></View>
-        <View style={styles.book}></View>
-        <View style={styles.book}></View>
-        <View style={styles.book}></View>
-        <View style={styles.book}></View>
-        <View style={styles.book}></View>
-        <View style={styles.book}></View>
-        <View style={styles.book}></View>
-        <View style={styles.book}></View>
+
       </ScrollView>
     </View>
+
   );
 }
 

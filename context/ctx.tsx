@@ -9,19 +9,21 @@ const AuthContext = createContext<{
   signOut: () => Promise<void>;
   validateToken: () => Promise<boolean>;
   session?: string | null;
-  userId: string | null;
+  userId?: string | null;
   isLoading: boolean;
+  isUserIdLoading: boolean;
   adminToken: string | null; // Global variable for admin token
   userToken: string | null;   // Global variable for user token
   setAdminToken: (token: string | null) => void; // Function to set admin token
   setUserToken: (token: string | null) => void;   // Function to set user token
-}>({
+}>( {
   signIn: async () => Promise.resolve(),
   signOut: async () => Promise.resolve(),
   validateToken: async () => Promise.resolve(false),
   session: null,
   userId: null,
   isLoading: false,
+  isUserIdLoading: false,
   adminToken: null,
   userToken: null,
   setAdminToken: () => null,
@@ -42,7 +44,7 @@ export function useSession() {
 
 export function SessionProvider({ children }: PropsWithChildren) {
   const [[isLoading, session], setSession] = useStorageState('session');
-  const [userId, setUserId] = useStorageState('userId');
+  const [[isUserIdLoading, userId], setUserId] = useStorageState('userId');
   const [authLoading, setAuthLoading] = useState(false); 
   const [adminToken, setAdminToken] = useState<string | null>(null); // Initialize adminToken
   const [userToken, setUserToken] = useState<string | null>(null); // Initialize userToken 
@@ -55,10 +57,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
         username,
         password,
       });
-
-      console.log('API Response:', response.data);
       
-      // Assuming the API response contains the session token in response.data.token
       const token = response.data.admin_token || response.data.user_token;
       const user_id = response.data.user.id;
 
@@ -110,7 +109,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
     }
     
     try {
-      const response = await axios.post(`${API_BASE_URL}/validate-toklen`, {
+      const response = await axios.post(`${API_BASE_URL}/validate-token`, {
         token: session, // Using the session token for validation
       });
       return response.data.valid; // Assuming the response has a 'valid' field
@@ -127,8 +126,9 @@ export function SessionProvider({ children }: PropsWithChildren) {
       signOut,
       validateToken,
       session,
-      userId: userId[1],
+      userId,
       isLoading: isLoading || authLoading,
+      isUserIdLoading: isUserIdLoading || authLoading,
       adminToken,
       userToken,
       setAdminToken,
