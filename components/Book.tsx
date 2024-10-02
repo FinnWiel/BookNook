@@ -38,8 +38,8 @@ const Book: React.FC<BookProps> = ({ title, author, coverImage, bookId }) => {
 
 const styles = StyleSheet.create({
   container: {
-    width: 180,
-    margin: 10,
+    width: 160,
+    margin: 5,
     borderColor: "#ccc",
     borderRadius: 8,
     overflow: "hidden",
@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
   },
   image: {
     width: "100%",
-    height: 220,
+    height: 195,
   },
   textContainer: {
     padding: 8,

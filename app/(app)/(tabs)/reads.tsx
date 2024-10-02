@@ -1,13 +1,89 @@
-import { Text, View, StyleSheet } from "react-native";
-import { useColorScheme, ScrollView, TextInput } from "react-native";
+import { Text, View, StyleSheet, ActivityIndicator } from "react-native";
+import { useColorScheme, ScrollView, TextInput, FlatList } from "react-native";
 import { Colors } from "@/constants/Colors";
 import { useSession } from "../../../context/ctx";
-import { FontAwesome6 } from "@expo/vector-icons";
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { API_BASE_URL } from "@/constants/Api";
+import Book from "@/components/Book";
+
+interface Genre {
+  id: number;
+  name: string;
+}
+
+interface Book {
+  id: number;
+  title: string;
+  author: string;
+  publicationDate: string;
+  totalAmount: number;
+  currentAmount: number;
+  genres: Genre[];
+}
+
+interface Loan {
+  book: Book;
+  dueDate: string;
+  loanedAt: string;
+  returnedAt: string | null;
+}
+
 
 export default function Reads() {
-  const { signOut } = useSession();
+  const { signOut, session, userId } = useSession();
   const colorScheme = useColorScheme();
   const theme = colorScheme === "dark" ? Colors.dark : Colors.light;
+  const [loading, setLoading] = useState<boolean>(false);
+  const [loans, setLoans] = useState<Loan[]>([]);
+  const [isUserIdValid, setIsUserIdValid] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (userId && typeof userId === "number" && userId > 0) {
+      setIsUserIdValid(true);
+    } else {
+      setIsUserIdValid(false);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    if(isUserIdValid){
+      fetchBooks();
+    }
+  }, [isUserIdValid]);
+
+  const fetchBooks = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(
+        API_BASE_URL + `users/${userId}?includeRead`,
+        {
+          headers: {
+            Authorization: `Bearer ${session}`,
+          },
+        }
+      );
+
+      setLoans(response.data.data.loans);
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        console.error('Axios Error:', error.response?.data);
+        console.error('Error Code:', error.response?.status);
+        console.error('Error Config:', error.config);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const renderItem = ({ item }: { item: Loan }) => (
+    <Book
+      title={item.book.title || "Title"}
+      author={item.book.author || "Author"}
+      key={item.book.id}
+      bookId={item.book.id || 0}
+    />
+  );
 
   return (
     <View
@@ -18,65 +94,50 @@ export default function Reads() {
         backgroundColor: theme.background,
       }}
     >
-      <Text style={styles.title}>
-        Your reading list.
-      </Text>
-      <ScrollView contentContainerStyle={styles.results} pagingEnabled={true} persistentScrollbar={true}>
-
-      </ScrollView>
+      <Text style={styles.title}>Your reading list.</Text>
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="white" />
+        </View>
+      ) : (
+        <FlatList
+          data={loans}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.book.id.toString()} // Use book.id as the key
+          contentContainerStyle={styles.bookContainer}
+          numColumns={2} // Display items in two columns
+          ListEmptyComponent={<Text style={styles.noBooks}>No current loans.</Text>} // Show message when no loans
+        />
+      )}
     </View>
-
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "flex-start",
-    alignItems: "flex-start",
-  },
   bookContainer: {
-    marginLeft: 15,
-    marginBottom: 15,
-  },
-  book: {
-    width: 200,
-    height: 300,
-    backgroundColor: "gray",
-    marginRight: 15,
-    borderRadius: 10,
+    flexGrow: 1, 
+    justifyContent: "space-between",
+    padding: 10,
   },
   title: {
     fontSize: 24,
     fontWeight: "bold",
     color: "#A33B20",
-    marginLeft: 15,
-    marginVertical: 31,
+    marginVertical: 15,
+    marginTop: 55,
   },
-  dueDate: {
-    display: "flex",
-    flexDirection: "column",
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
     alignItems: "center",
-    justifyContent: "center",
-    margin: 15,
-    backgroundColor: "#A33B20",
-    borderRadius: 10,
-    padding: 20,
-    height: 150,
+    height: 300,
+    margin: 20,
   },
-  dueDateText: {
+  noBooks: {
     color: "white",
-    fontSize: 24,
-    marginHorizontal: 10,
-    fontWeight: "bold",
-  },
-  results: {
-    display: "flex",
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "center",
-    width: "100%",
-    gap: 15,
-
+    fontSize: 18,
+    fontStyle: "italic",
+    margin: 20,
+    textAlign: "center",
   },
 });

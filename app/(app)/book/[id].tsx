@@ -91,7 +91,7 @@ export default function BookView() {
           <Text style={styles.loadingText}>Loading...</Text>
         </View>
       ) : (
-        <View>
+        <View style={styles.container}>
           <Image source={defaultImage} style={styles.image} />
           <View style={styles.bookInfo}>
             <Text style={[styles.title, { color: theme.text }]}>
@@ -125,17 +125,24 @@ export default function BookView() {
 const styles = StyleSheet.create({
   image: {
     margin: 15,
+    marginTop: 5,
     width: 300,
     height: 400,
+  },
+  container: {
+    marginLeft: 5,
   },
   backContainer: {
     display: "flex",
     flexDirection: "row",
     alignItems: "center",
+    marginTop: 35,
+    marginLeft: 5,
   },
   backText: {
     color: "#A33B20",
     fontSize: 18,
+    fontWeight: "bold",
   },
   loadingContainer: {
     flex: 1,

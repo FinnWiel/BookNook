@@ -1,8 +1,7 @@
-import { Text, View, StyleSheet, ActivityIndicator, ScrollView, TextInput  } from "react-native";
+import { Text, View, StyleSheet, ActivityIndicator, ScrollView, TextInput, RefreshControl } from "react-native";
 import { useColorScheme } from "react-native";
 import { Colors } from "@/constants/Colors";
 import { useSession } from "../../../context/ctx";
-// import { ScrollView, TextInput } from "react-native-gesture-handler";
 import { FontAwesome6 } from "@expo/vector-icons";
 import Book from "@/components/Book";
 import { useEffect, useState } from "react";
@@ -31,67 +30,98 @@ interface Loan {
   returnedAt: string | null;
 }
 
-
 export default function Index() {
-  const { signOut, adminToken, userToken, session, userId } = useSession();
+  const { session, userId } = useSession();
   const colorScheme = useColorScheme();
   const theme = colorScheme === "dark" ? Colors.dark : Colors.light;
 
   const [newBooks, setNewBooks] = useState<Book[]>([]);
   const [loans, setLoans] = useState<Loan[]>([]);
-  const [loadingNew, setLoadingNew] = useState<boolean>(true); // Loading
-  const [loadingLoan, setLoadingLoan] = useState<boolean>(true); // Loading
+  const [loadingNew, setLoadingNew] = useState<boolean>(true);
+  const [loadingLoan, setLoadingLoan] = useState<boolean>(true);
+  const [isUserIdValid, setIsUserIdValid] = useState<boolean>(false);
+  const [refreshing, setRefreshing] = useState<boolean>(false); // State for refreshing
 
-  // Fetch the latest books from the API when the component mounts
   useEffect(() => {
-    fetchLatestBooks();
-    fetchCurrentLoans();
-  }, []);
+    if (userId && typeof userId === "number" && userId > 0) {
+      setIsUserIdValid(true);
+    } else {
+      setIsUserIdValid(false);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    fetchData(); // Fetch data on mount
+  }, [isUserIdValid]);
+
+  const fetchData = async () => {
+    await fetchLatestBooks();
+    if (isUserIdValid) {
+      await fetchCurrentLoans();
+    }
+  };
 
   const fetchLatestBooks = async () => {
     setLoadingNew(true);
     try {
-        const response = await axios.get(API_BASE_URL + "books?latest", {
-            headers: {
-                Authorization: `Bearer ${session}`, // Include the Bearer token
-            },
-        });
-        
-        setNewBooks(response.data.data); // Use `response.data.data` to get the array of books
-    } catch (error) {
-        console.error("Error fetching latest books:", error);
-    } finally {
-        setLoadingNew(false); // Ensure loading state is reset in finally block
-    }
-};
+      const response = await axios.get(API_BASE_URL + "books?latest", {
+        headers: {
+          Authorization: `Bearer ${session}`, // Include the Bearer token
+        },
+      });
 
-const fetchCurrentLoans = async () => {
+      setNewBooks(response.data.data); // Use `response.data.data` to get the array of books
+    } catch (error) {
+      console.error("Error fetching latest books:", error);
+    } finally {
+      setLoadingNew(false); // Ensure loading state is reset in finally block
+    }
+  };
+
+  const fetchCurrentLoans = async () => {
     setLoadingLoan(true);
     try {
-        const response = await axios.get(API_BASE_URL + `users/${userId}?includeCurrentLoans`, {
-            headers: {
-                Authorization: `Bearer ${session}`, // Include the Bearer token
-            },
-        });
+      const response = await axios.get(API_BASE_URL + `users/${userId?.toString()}?includeCurrentLoans`, {
+        headers: {
+          Authorization: `Bearer ${session}`,
+        },
+      });
 
-        setLoans(response.data.data.loans); // Use `data.data` to get the loans
-    } catch (error) {
-        console.error("Error fetching current loans:", error);
+      setLoans(response.data.data.loans);
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        console.error('Axios Error:', error.response?.data);
+        console.error('Error Code:', error.response?.status);
+        console.error('Error Config:', error.config);
+      }
     } finally {
-        setLoadingLoan(false); // Ensure loading state is reset in finally block
+      setLoadingLoan(false);
     }
-};
+  };
 
+  const onRefresh = async () => {
+    setRefreshing(true); // Set refreshing to true
+    await fetchData(); // Fetch data again
+    setRefreshing(false); // Reset refreshing state
+  };
 
   return (
-    <ScrollView style={{ backgroundColor: theme.background }}>
+    <ScrollView
+      style={{ backgroundColor: theme.background }}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh} // Trigger refresh function
+        />
+      }
+    >
       <View style={styles.searchContainer}>
         <TextInput
           placeholderTextColor={theme.text}
           placeholder="Search..."
           style={[
             styles.searchBar,
-            { borderColor: theme.primary, color: theme.text},
+            { borderColor: theme.primary, color: theme.text },
           ]}
         ></TextInput>
         <View style={styles.searchIcon}>
@@ -99,7 +129,6 @@ const fetchCurrentLoans = async () => {
             name="magnifying-glass"
             size={20}
             color={"white"}
-            style={[{ position: "absolute", right: 20, top: 15 }]}
           />
         </View>
       </View>
@@ -117,12 +146,12 @@ const fetchCurrentLoans = async () => {
             ))}
           </View>
         ) : (
-            <Text style={styles.dueDateText}>No upcoming due dates</Text>
+          <Text style={styles.dueDateText}>No upcoming due dates</Text>
         )}
       </View>
 
       <Text style={styles.title}>New arrivals!</Text>
-      {loadingNew ? ( 
+      {loadingNew ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="white" />
         </View>
@@ -138,29 +167,29 @@ const fetchCurrentLoans = async () => {
               />
             ))
           ) : (
-              <Text style={styles.noBooks}>No new arrivals.</Text>
+            <Text style={styles.noBooks}>No new arrivals.</Text>
           )}
         </ScrollView>
       )}
 
       <Text style={styles.title}>Current Loans</Text>
-      {loadingLoan ? ( 
+      {loadingLoan ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="white" />
         </View>
       ) : (
         <ScrollView horizontal={true} style={styles.bookContainer}>
           {loans.length > 0 ? (
-            loans.map((book, index) => (
+            loans.map((loan, index) => (
               <Book
-                title={book.book.title || "Title"}
-                author={book.book.author || "Author"}
+                title={loan.book.title || "Title"}
+                author={loan.book.author || "Author"}
                 key={index}
-                bookId={book.book.id || 0}
+                bookId={loan.book.id || 0}
               />
             ))
           ) : (
-              <Text style={styles.noBooks}>No current loans.</Text>
+            <Text style={styles.noBooks}>No current loans.</Text>
           )}
         </ScrollView>
       )}
@@ -204,17 +233,20 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   searchIcon: {
-    width: "15%",
+    width: "10%",
     height: 50,
-    paddingTop: 10,
     marginTop: 15,
+    marginRight: 15,
     borderRadius: 10,
     backgroundColor: "#A33B20",
     textAlign: "center",
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
     cursor: "pointer",
   },
   bookContainer: {
-    marginLeft: 15,
+    marginLeft: 10,
     marginBottom: 15,
   },
   book: {

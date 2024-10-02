@@ -46,8 +46,8 @@ export function SessionProvider({ children }: PropsWithChildren) {
   const [[isLoading, session], setSession] = useStorageState('session');
   const [[isUserIdLoading, userId], setUserId] = useStorageState('userId');
   const [authLoading, setAuthLoading] = useState(false); 
-  const [adminToken, setAdminToken] = useState<string | null>(null); // Initialize adminToken
-  const [userToken, setUserToken] = useState<string | null>(null); // Initialize userToken 
+  const [adminToken, setAdminToken] = useState<string | null>(null);
+  const [userToken, setUserToken] = useState<string | null>(null); 
   const router = useRouter();
 
   const signIn = async (username: string, password: string) => {
@@ -64,7 +64,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
       if (token) {
         setSession(token);
         setUserId(user_id);
-        // Set global tokens if they exist in the response
+
         setAdminToken(response.data.admin_token);
         setUserToken(response.data.user_token);
         router.push('/');  
@@ -73,19 +73,17 @@ export function SessionProvider({ children }: PropsWithChildren) {
       }
     } catch (error) {
       console.error('Error during sign-in:', error);
-      // Handle error (e.g., show a message to the user)
     } finally {
       setAuthLoading(false);
     }
   };
 
   const signOut = async () => {
-    setAuthLoading(true);  // Optional: You might want to show a loading state while signing out
+    setAuthLoading(true); 
     try {
-      // Make the logout request with the Bearer token
       const response = await axios.post(API_BASE_URL + 'logout', {}, {
         headers: {
-          Authorization: `Bearer ${session}`,  // Use the token stored in session
+          Authorization: `Bearer ${session}`, 
         },
       });
 
@@ -94,12 +92,11 @@ export function SessionProvider({ children }: PropsWithChildren) {
       // Clear session
       setSession(null);
       setUserId(null);
-      router.push('/sign-in');  // Redirect to the login page after signing out
+      router.push('/sign-in');  
     } catch (error) {
       console.error('Error during sign-out:', error);
-      // Handle error (e.g., show a message to the user)
     } finally {
-      setAuthLoading(false);  // Reset loading state after the request
+      setAuthLoading(false); 
     }
   };
 
@@ -110,9 +107,9 @@ export function SessionProvider({ children }: PropsWithChildren) {
     
     try {
       const response = await axios.post(`${API_BASE_URL}/validate-token`, {
-        token: session, // Using the session token for validation
+        token: session,
       });
-      return response.data.valid; // Assuming the response has a 'valid' field
+      return response.data.valid;
     } catch (error) {
       console.error('Error during token validation:', error);
       return false;

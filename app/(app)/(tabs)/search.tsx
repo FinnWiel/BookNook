@@ -1,57 +1,127 @@
-import { Text, View, StyleSheet } from "react-native";
-import { useColorScheme, ScrollView, TextInput } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  Text,
+  View,
+  StyleSheet,
+  ActivityIndicator,
+  ScrollView,
+  TextInput,
+  RefreshControl,
+} from "react-native";
+import { useColorScheme } from "react-native";
 import { Colors } from "@/constants/Colors";
 import { useSession } from "../../../context/ctx";
 import { FontAwesome6 } from "@expo/vector-icons";
 import Book from "@/components/Book";
+import axios from "axios";
+import { API_BASE_URL } from "@/constants/Api";
 
-export default function Search() {
-  const { signOut } = useSession();
+interface Genre {
+  id: number;
+  name: string;
+}
+
+interface BookType {
+  id: number;
+  title: string;
+  author: string;
+  publicationDate: string;
+  totalAmount: number;
+  currentAmount: number;
+  genres: Genre[];
+}
+
+const Search: React.FC = () => {
+  const { session } = useSession();
   const colorScheme = useColorScheme();
   const theme = colorScheme === "dark" ? Colors.dark : Colors.light;
+  const [loading, setLoading] = useState<boolean>(true); 
+  const [books, setBooks] = useState<BookType[]>([]); 
+  const [search, setSearch] = useState<string>(""); 
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+
+  useEffect(() => {
+    setSearch(""); 
+  }, []); 
+
+  useEffect(() => {
+    fetchBooks(); 
+  }, [search]); 
+
+  const fetchBooks = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`${API_BASE_URL}books?title[like]=${search}`, {
+        headers: {
+          Authorization: `Bearer ${session}`, 
+        },
+      });
+      const fetchedBooks = response.data?.data || [];
+      setBooks(fetchedBooks); 
+    } catch (error) {
+      console.error("Error fetching latest books:", error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  const handleSearchSubmit = () => {
+    fetchBooks();
+    setSearch(""); 
+  };
+
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchBooks(); 
+  };
 
   return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        backgroundColor: theme.background,
-      }}
-    >
+    <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: theme.background }}>
       <View style={styles.searchContainer}>
         <TextInput
           placeholderTextColor={theme.text}
           placeholder="Search..."
-          style={[
-            styles.searchBar,
-            { borderColor: theme.primary, color: theme.primary },
-          ]}
-        ></TextInput>
+          style={[styles.searchBar, { borderColor: theme.primary, color: theme.primary }]}
+          value={search} 
+          onChangeText={(text) => setSearch(text)} 
+          onSubmitEditing={handleSearchSubmit}
+        />
         <View style={styles.searchIcon}>
-          <FontAwesome6
-            name="magnifying-glass"
-            size={20}
-            color={"white"}
-            style={[{ position: "absolute", right: 20, top: 15 }]}
-          />
+          <FontAwesome6 name="magnifying-glass" size={20} color={"white"} />
         </View>
       </View>
-      <ScrollView contentContainerStyle={styles.results} pagingEnabled={true} persistentScrollbar={true}>
+      <ScrollView
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="white" />
+          </View>
+        ) : (
+          <View style={styles.bookContainer}>
+            {books && books.length > 0 ? (
+              books.map((book) => (
+                <View style={styles.bookItem} key={book.id}>
+                  <Book title={book.title || ""} author={book.author || ""} bookId={book.id || 0} />
+                </View>
+              ))
+            ) : (
+              <Text style={styles.noBooks}>No books found.</Text>
+            )}
+          </View>
+        )}
       </ScrollView>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "flex-start",
-    alignItems: "flex-start",
-  },
   searchContainer: {
     width: "100%",
-    display: "flex",
     flexDirection: "row",
     marginTop: 35,
   },
@@ -68,48 +138,41 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   searchIcon: {
-    width: "15%",
+    width: "10%",
     height: 50,
-    paddingTop: 10,
     marginTop: 15,
+    marginRight: 15,
     borderRadius: 10,
     backgroundColor: "#A33B20",
     textAlign: "center",
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
     cursor: "pointer",
   },
   bookContainer: {
-    marginLeft: 15,
-    marginBottom: 15,
+    flexDirection: 'row',
+    flexWrap: 'wrap', 
+    margin: 5,
+    gap: 10,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#A33B20",
-    marginLeft: 15,
-    marginVertical: 15,
+  bookItem: {
+    width: '48%',
   },
-  dueDate: {
-    display: "flex",
-    flexDirection: "column",
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
     alignItems: "center",
-    justifyContent: "center",
-    margin: 15,
-    backgroundColor: "#A33B20",
-    borderRadius: 10,
-    padding: 20,
-    height: 150,
+    height: 300,
+    margin: 20,
   },
-  dueDateText: {
+  noBooks: {
     color: "white",
-    fontSize: 24,
-    marginHorizontal: 10,
-    fontWeight: "bold",
-  },
-  results: {
-    display: "flex",
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "center",
-    width: "100%",
+    fontSize: 18,
+    fontStyle: "italic",
+    margin: 20,
+    textAlign: "center",
   },
 });
+
+export default Search;
