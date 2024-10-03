@@ -163,7 +163,6 @@ export default function Profile() {
       <Text
         style={styles.logout}
         onPress={() => {
-          // The `app/(app)/_layout.tsx` will redirect to the sign-in screen.
           console.log("Signing out...");
           signOut();
         }}

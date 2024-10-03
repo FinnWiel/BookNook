@@ -175,6 +175,7 @@ const styles = StyleSheet.create({
   },
   genresContainer: {
     display: "flex",
+    flexWrap: "wrap",
     flexDirection: "row",
     gap: 10,
     marginVertical: 5,
