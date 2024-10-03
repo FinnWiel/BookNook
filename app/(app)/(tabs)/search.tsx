@@ -4,9 +4,9 @@ import {
   View,
   StyleSheet,
   ActivityIndicator,
-  ScrollView,
   TextInput,
   RefreshControl,
+  FlatList,
 } from "react-native";
 import { useColorScheme } from "react-native";
 import { Colors } from "@/constants/Colors";
@@ -15,6 +15,7 @@ import { FontAwesome6 } from "@expo/vector-icons";
 import Book from "@/components/Book";
 import axios from "axios";
 import { API_BASE_URL } from "@/constants/Api";
+import { router, useGlobalSearchParams } from "expo-router";
 
 interface Genre {
   id: number;
@@ -35,29 +36,36 @@ const Search: React.FC = () => {
   const { session } = useSession();
   const colorScheme = useColorScheme();
   const theme = colorScheme === "dark" ? Colors.dark : Colors.light;
-  const [loading, setLoading] = useState<boolean>(true); 
-  const [books, setBooks] = useState<BookType[]>([]); 
-  const [search, setSearch] = useState<string>(""); 
+  const [loading, setLoading] = useState<boolean>(true);
+  const [books, setBooks] = useState<BookType[]>([]);
+  const [search, setSearch] = useState<string>("");
+  const [submittedSearch, setSubmittedSearch] = useState<string>("");
   const [refreshing, setRefreshing] = useState<boolean>(false);
+  const { query } = useGlobalSearchParams(); // Access query param from URL
 
   useEffect(() => {
-    setSearch(""); 
-  }, []); 
-
-  useEffect(() => {
-    fetchBooks(); 
-  }, [search]); 
+    //only check after redirect from index
+    if(query){
+      setSubmittedSearch(query.toString());
+      router.replace("/search");
+    }
+    fetchBooks();
+    setSearch(""); // Clear the input field after the search is submitted
+  }, [submittedSearch,  query]);
 
   const fetchBooks = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${API_BASE_URL}books?title[like]=${search}`, {
-        headers: {
-          Authorization: `Bearer ${session}`, 
-        },
-      });
+      const response = await axios.get(
+        `${API_BASE_URL}books?title[like]=${submittedSearch}`,
+        {
+          headers: {
+            Authorization: `Bearer ${session}`,
+          },
+        }
+      );
       const fetchedBooks = response.data?.data || [];
-      setBooks(fetchedBooks); 
+      setBooks(fetchedBooks);
     } catch (error) {
       console.error("Error fetching latest books:", error);
     } finally {
@@ -68,53 +76,70 @@ const Search: React.FC = () => {
 
   const handleSearchSubmit = () => {
     fetchBooks();
-    setSearch(""); 
+    setSubmittedSearch(search); // Set the API call to use the current search term
+    setSearch(""); // Clear the input field after the search is submitted
   };
-
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchBooks(); 
+    setSubmittedSearch(""); // Clear previous search
+    setBooks([]); // Clear previous book results
+    await fetchBooks();
+    setRefreshing(false);
   };
 
+  // Define how each book item will be rendered
+  const renderBook = ({ item }: { item: BookType }) => (
+    <View style={styles.bookItem}>
+      <Book title={item.title || ""} author={item.author || ""} bookId={item.id || 0} />
+    </View>
+  );
+
   return (
-    <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: theme.background }}>
+    <View
+      style={{
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: theme.background,
+      }}
+    >
       <View style={styles.searchContainer}>
         <TextInput
           placeholderTextColor={theme.text}
           placeholder="Search..."
-          style={[styles.searchBar, { borderColor: theme.primary, color: theme.primary }]}
-          value={search} 
-          onChangeText={(text) => setSearch(text)} 
+          style={[
+            styles.searchBar,
+            { borderColor: theme.primary, color: theme.primary },
+          ]}
+          value={search}
+          onChangeText={(text) => setSearch(text)}
           onSubmitEditing={handleSearchSubmit}
         />
         <View style={styles.searchIcon}>
           <FontAwesome6 name="magnifying-glass" size={20} color={"white"} />
         </View>
       </View>
-      <ScrollView
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-      >
-        {loading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="white" />
-          </View>
-        ) : (
-          <View style={styles.bookContainer}>
-            {books && books.length > 0 ? (
-              books.map((book) => (
-                <View style={styles.bookItem} key={book.id}>
-                  <Book title={book.title || ""} author={book.author || ""} bookId={book.id || 0} />
-                </View>
-              ))
-            ) : (
-              <Text style={styles.noBooks}>No books found.</Text>
-            )}
-          </View>
-        )}
-      </ScrollView>
+
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="white" />
+        </View>
+      ) : (
+        <FlatList
+          data={books} // Provide the list of books
+          renderItem={renderBook} // Render each book item
+          keyExtractor={(item) => item.id.toString()} // Use book id as key
+          numColumns={2} // Display two items per row
+          contentContainerStyle={styles.bookContainer} // Apply styles to the list
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+          ListEmptyComponent={() => (
+            <Text style={styles.noBooks}>No books found.</Text>
+          )}
+        />
+      )}
     </View>
   );
 };
@@ -151,13 +176,12 @@ const styles = StyleSheet.create({
     cursor: "pointer",
   },
   bookContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap', 
-    margin: 5,
-    gap: 10,
+    marginRight: 10,
   },
   bookItem: {
-    width: '48%',
+    width: "48%",
+    marginBottom: 15, // Add space between rows
+    marginHorizontal: 5, // Add space between columns
   },
   loadingContainer: {
     flex: 1,

@@ -7,6 +7,7 @@ import Book from "@/components/Book";
 import { useEffect, useState } from "react";
 import { API_BASE_URL } from "@/constants/Api";
 import axios from "axios";
+import { router } from "expo-router";
 
 interface Genre {
   id: number;
@@ -40,7 +41,18 @@ export default function Index() {
   const [loadingNew, setLoadingNew] = useState<boolean>(true);
   const [loadingLoan, setLoadingLoan] = useState<boolean>(true);
   const [isUserIdValid, setIsUserIdValid] = useState<boolean>(false);
-  const [refreshing, setRefreshing] = useState<boolean>(false); // State for refreshing
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [search, setSearch] = useState<string>("");
+
+
+  const handleSearchSubmit = () => {
+    if (search) {
+      router.push(`/search?query=${search}`);
+      setSearch("");
+    }
+  };
+
+  
 
   useEffect(() => {
     if (userId && typeof userId === "number" && userId > 0) {
@@ -69,6 +81,8 @@ export default function Index() {
           Authorization: `Bearer ${session}`, // Include the Bearer token
         },
       });
+
+
 
       setNewBooks(response.data.data); // Use `response.data.data` to get the array of books
     } catch (error) {
@@ -117,12 +131,15 @@ export default function Index() {
     >
       <View style={styles.searchContainer}>
         <TextInput
+          value={search}
           placeholderTextColor={theme.text}
           placeholder="Search..."
           style={[
             styles.searchBar,
             { borderColor: theme.primary, color: theme.text },
           ]}
+          onChangeText={(text) => setSearch(text)}
+          onSubmitEditing={handleSearchSubmit}
         ></TextInput>
         <View style={styles.searchIcon}>
           <FontAwesome6
