@@ -10,8 +10,23 @@ export default function SignIn() {
   const { signIn } = useSession();
   const [inputUsername, setInputUsername] = useState('');
   const [inputPassword, setInputPassword] = useState('');
+  const [error, setError] = useState('');
   const colorScheme = useColorScheme();
   const theme = colorScheme === 'dark' ? Colors.dark : Colors.light;
+
+  const handleSignIn = async () => {
+    try {
+      // Attempt to sign in
+      await signIn(inputUsername, inputPassword);
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message); 
+      } else {
+        setError('An unexpected error occurred'); 
+      }
+    }
+  };
+  
 
   return (
     <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: theme.background  }}>
@@ -33,6 +48,7 @@ export default function SignIn() {
       </View>
 
       <Text style={styles.title}>Login</Text>
+      <Text style={styles.error}>{error}</Text>
 
       <View style={styles.inputContainer}>
         <View>
@@ -53,7 +69,7 @@ export default function SignIn() {
           ></TextInput>
         </View>
 
-        <Text style={styles.loginButton} onPress={() => signIn(inputUsername, inputPassword)}>
+        <Text style={styles.loginButton} onPress={handleSignIn}>
           Login
         </Text>
       </View>
@@ -66,6 +82,9 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: 30,
     top: 60,
+  },
+  error: {
+    color: "red",
   },
   logoContainer: {
     flexDirection: "row",

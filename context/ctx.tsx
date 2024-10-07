@@ -6,6 +6,7 @@ import { API_BASE_URL } from '../constants/Api'; // Import the base URL
 
 const AuthContext = createContext<{
   signIn: (username: string, password: string) => Promise<void>;
+  signUp: (name: string, username: string, email: string, password: string, confirmPassword: string) => Promise<void>;
   signOut: () => Promise<void>;
   validateToken: () => Promise<boolean>;
   session?: string | null;
@@ -18,6 +19,7 @@ const AuthContext = createContext<{
   setUserToken: (token: string | null) => void;   // Function to set user token
 }>( {
   signIn: async () => Promise.resolve(),
+  signUp: async () => Promise.resolve(),
   signOut: async () => Promise.resolve(),
   validateToken: async () => Promise.resolve(false),
   session: null,
@@ -72,11 +74,55 @@ export function SessionProvider({ children }: PropsWithChildren) {
         throw new Error('No valid token found in the response');
       }
     } catch (error) {
-      console.error('Error during sign-in:', error);
+      // Check if it's an Axios error
+      if (axios.isAxiosError(error)) {
+        // Adjust to extract the "error" field from the response
+        const errorMessage = error.response?.data?.error || 'Failed to sign in';
+        throw new Error(errorMessage);
+      } else if (error instanceof Error) {
+        throw new Error(error.message);
+      } else {
+        throw new Error('An unexpected error occurred during sign-in');
+      }
     } finally {
       setAuthLoading(false);
     }
   };
+
+  const signUp = async (name: string, username: string, email: string, password: string, confirmPassword: string) => {
+
+    if (password !== confirmPassword) {
+      throw new Error('Passwords do not match');
+    }
+
+    setAuthLoading(true);
+
+    try {
+      const response = await axios.post(API_BASE_URL + 'register', {
+        "name": name,
+        "username": username,
+        "email": email,
+        "password": password,
+        "password_confirmation": confirmPassword,
+      });
+
+      if(response.status === 200 || response.status === 201) {
+        await signIn(username, password);
+      }
+
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const errorMessage = error.response?.data?.error || 'Failed to register';
+        throw new Error(errorMessage);
+      } else if (error instanceof Error) {
+        throw new Error(error.message);
+      } else {
+        throw new Error('An unexpected error occurred during sign-in');
+      }
+    } finally {
+      setAuthLoading(false); 
+    }
+  }
 
   const signOut = async () => {
     setAuthLoading(true); 
@@ -120,6 +166,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
     <AuthContext.Provider
     value={{
       signIn,
+      signUp,
       signOut,
       validateToken,
       session,

@@ -4,11 +4,36 @@ import { useColorScheme } from "react-native";
 import { Colors } from "@/constants/Colors";
 import { useSession } from "../../context/ctx";
 import { FontAwesome6 } from "@expo/vector-icons";
+import { useState } from "react";
 
 export default function SignUp() {
 
   const colorScheme = useColorScheme();
   const theme = colorScheme === 'dark' ? Colors.dark : Colors.light;
+
+  const { signUp } = useSession();
+
+  const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  const [error, setError] = useState('');
+
+  const handleSignUp = async () => {
+    // console.log(name, username, email, password, confirmPassword);
+    try {
+      await signUp(name, username, email, password, confirmPassword);
+    } catch (err) {
+      if (err instanceof Error) {
+        console.log(err);	
+        setError(err.message);  
+      } else {
+        setError('An unexpected error occurred'); // Fallback message for unknown errors
+      }
+    }
+  }
 
     return (
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: theme.background }}>
@@ -30,6 +55,7 @@ export default function SignUp() {
           </View>
     
           <Text style={styles.title}>Register</Text>
+          <Text style={styles.error}>{error}</Text>
     
           <ScrollView style={styles.inputContainer}>
             <View>
@@ -37,22 +63,23 @@ export default function SignUp() {
               <TextInput
                 style={styles.inputBox}
                 selectionColor={"#A33B20"}
+                onChangeText={setName}
               ></TextInput>
             </View>
             <View>
               <Text style={styles.inputLabel}>Username</Text>
               <TextInput
-                secureTextEntry={true}
                 style={styles.inputBox}
                 selectionColor={"#A33B20"}
+                onChangeText={setUsername}
               ></TextInput>
             </View>
             <View>
               <Text style={styles.inputLabel}>E-mail</Text>
               <TextInput
-                secureTextEntry={true}
                 style={styles.inputBox}
                 selectionColor={"#A33B20"}
+                onChangeText={setEmail}
               ></TextInput>
             </View>
             <View>
@@ -61,6 +88,7 @@ export default function SignUp() {
                 secureTextEntry={true}
                 style={styles.inputBox}
                 selectionColor={"#A33B20"}
+                onChangeText={setPassword}
               ></TextInput>
             </View>
             <View>
@@ -69,10 +97,11 @@ export default function SignUp() {
                 secureTextEntry={true}
                 style={styles.inputBox}
                 selectionColor={"#A33B20"}
+                onChangeText={setConfirmPassword}
               ></TextInput>
             </View>
     
-            <Text style={styles.registerButton}>
+            <Text style={styles.registerButton} onPress={handleSignUp}>
                 Register
             </Text>
           </ScrollView>
@@ -85,6 +114,9 @@ export default function SignUp() {
         position: "absolute",
         left: 30,
         top: 60,
+      },
+      error: {
+        color: "red",
       },
       logoContainer: {
         flexDirection: "row",

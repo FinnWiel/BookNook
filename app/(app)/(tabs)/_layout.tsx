@@ -1,26 +1,61 @@
 import { ActivityIndicator, Text, StyleSheet, View } from "react-native";
-import { Redirect, Stack, Tabs, useRouter } from "expo-router";
+import { Redirect, Tabs } from "expo-router";
 import { useColorScheme } from "react-native";
 import { Colors } from "@/constants/Colors";
 import { useSession } from "../../../context/ctx";
 import { FontAwesome } from "@expo/vector-icons";
 import axios from "axios";
 import { API_BASE_URL } from "@/constants/Api";
+import { useEffect, useState } from "react";
 
 export default function AppLayout() {
-  const { validateToken, session, isLoading, } = useSession();
+  const { validateToken, session, isLoading } = useSession();
   const colorScheme = useColorScheme();
   const theme = colorScheme === "dark" ? Colors.dark : Colors.light;
+  const [validToken, setValidToken] = useState(false);
+  const [isTokenValidating, setIsTokenValidating] = useState(true); // New state for token validation
 
-  if (isLoading) {
+  useEffect(() => {
+    if (session) {
+      fetchData();
+    } else {
+      setIsTokenValidating(false); // No session, stop validating
+    }
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}validate-token`,
+        {
+          headers: {
+            Authorization: `Bearer ${session}`,
+          },
+        }
+      );
+      setValidToken(true);
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error("Axios Error:", error.response?.data);
+      }
+      setValidToken(false);
+    } finally {
+      setIsTokenValidating(false);
+    }
+  };
+
+  if (isLoading || isTokenValidating) {
     return (
-      <View style={[styles.loadingContainer, { backgroundColor: theme.background }]}>
+      <View
+        style={[styles.loadingContainer, { backgroundColor: theme.background }]}
+      >
         <ActivityIndicator size="large" color={theme.primary} />
       </View>
     );
   }
 
-  if (!session) {
+  // Redirect to landing page if no valid token is found
+  if (!session || !validToken) {
     return <Redirect href="../landing" />;
   }
 
