@@ -106,7 +106,7 @@ export default function Reads() {
           keyExtractor={(item) => item.book.id.toString()} // Use book.id as the key
           contentContainerStyle={styles.bookContainer}
           numColumns={2} // Display items in two columns
-          ListEmptyComponent={<Text style={styles.noBooks}>No current loans.</Text>} // Show message when no loans
+          ListEmptyComponent={<Text style={styles.noBooks}>No current books read.</Text>} // Show message when no loans
         />
       )}
     </View>
