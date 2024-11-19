@@ -13,7 +13,7 @@ import { FontAwesome6 } from "@expo/vector-icons";
 import Book from "@/components/Book";
 import { router, useGlobalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
-import { API_BASE_URL } from "@/constants/Api";
+import { API_BASE_URL, IMAGE_BASE_URL } from "@/constants/Api";
 import axios from "axios";
 
 interface Genre {
@@ -28,13 +28,13 @@ interface Book {
   publicationDate: string;
   totalAmount: number;
   currentAmount: number;
+  image: string | null;
   genres: Genre[];
 }
 
 export default function BookView() {
   const colorScheme = useColorScheme();
   const theme = colorScheme === "dark" ? Colors.dark : Colors.light;
-  const defaultImage = require("@/assets/images/base_img.jpg");
   const { session } = useSession();
   const [book, setBook] = useState<Book>();
   const [genres, setGenres] = useState<Genre[]>([]);
@@ -92,7 +92,7 @@ export default function BookView() {
         </View>
       ) : (
         <View style={styles.container}>
-          <Image source={defaultImage} style={styles.image} />
+          <Image source={book?.image ? { uri: IMAGE_BASE_URL + book?.image } : require("@/assets/images/base_img.jpg")} style={styles.image} />
           <View style={styles.bookInfo}>
             <Text style={[styles.title, { color: theme.text }]}>
               {book?.title || "Title"}

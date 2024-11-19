@@ -25,6 +25,7 @@ interface Book {
   publicationDate: string;
   totalAmount: number;
   currentAmount: number;
+  image: string | null;
   genres: Genre[];
 }
 
@@ -45,7 +46,7 @@ interface User {
 }
 
 export default function Profile() {
-  const { signOut, userId, session } = useSession();
+  const { signOut, session, userId, getUserId } = useSession();
   const colorScheme = useColorScheme();
   const [loans, setLoans] = useState<Loan[]>([]);
   const [loadingData, setLoadingData] = useState<boolean>(true);
@@ -54,11 +55,24 @@ export default function Profile() {
   const [allLoans, setAllLoans] = useState<Loan[]>([]); 
 
   useEffect(() => {
-    fetchData();
-    fetchAllLoans();
-  }, []);
+    setUser(null);
+    setLoans([]);
+  }, [userId, session]);  // Trigger whenever userId or session changes
+  
+  useEffect(() => {
+    if (session && !userId) {
+      getUserId();  // Get userId only when session exists and userId is not set
+    }
+    if (userId) {
+      fetchData();
+      fetchAllLoans();
+    }
+  }, [session, userId]);  // Dependencies include session and userId
+
+
 
   const fetchData = async () => {
+    if (!userId) return;
     setLoadingData(true);
     try {
       const response = await axios.get(
@@ -69,7 +83,6 @@ export default function Profile() {
           },
         }
       );
-
 
       setUser(response.data.data);
       setLoans(response.data.data.loans);
@@ -120,9 +133,14 @@ export default function Profile() {
       <Text style={styles.title}>Profile</Text>
 
       {loadingData ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="white" />
-        </View>
+        <View style={styles.profileinfo}>
+          <Text style={styles.infoLabel}>Name:</Text>
+          <ActivityIndicator size="small" color="white" style={styles.loadingUserInfo}/>
+          <Text style={styles.infoLabel}>Username:</Text>
+          <ActivityIndicator size="small" color="white" style={styles.loadingUserInfo}/>
+          <Text style={styles.infoLabel}>Email:</Text>
+          <ActivityIndicator size="small" color="white" style={styles.loadingUserInfo}/>
+      </View>
       ) : (
         <View style={styles.profileinfo}>
           <Text style={styles.infoLabel}>Name:</Text>
@@ -153,6 +171,7 @@ export default function Profile() {
                 author={loan.book.author || "Author"}
                 key={index}
                 bookId={loan.book.id || 0}
+                imagePath={loan.book.image || ""}
               />
             ))
           ) : (
@@ -256,5 +275,9 @@ const styles = StyleSheet.create({
     color: "#B30000",
     textDecorationLine: "underline",
     fontSize: 16,
+  },
+  loadingUserInfo:{
+    alignSelf: "flex-start",
+    marginVertical: 5,
   },
 });

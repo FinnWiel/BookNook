@@ -2,37 +2,30 @@ import { useContext, createContext, type PropsWithChildren, useState } from 'rea
 import { useStorageState } from '../hooks/useStorage';
 import axios from 'axios';
 import { useRouter } from 'expo-router';
-import { API_BASE_URL } from '../constants/Api'; // Import the base URL
+import { API_BASE_URL } from '../constants/Api'; 
 
 const AuthContext = createContext<{
   signIn: (username: string, password: string) => Promise<void>;
   signUp: (name: string, username: string, email: string, password: string, confirmPassword: string) => Promise<void>;
   signOut: () => Promise<void>;
   validateToken: () => Promise<boolean>;
+  getUserId: () => Promise<void>;
   session?: string | null;
   userId?: string | null;
   isLoading: boolean;
-  isUserIdLoading: boolean;
-  adminToken: string | null; // Global variable for admin token
-  userToken: string | null;   // Global variable for user token
-  setAdminToken: (token: string | null) => void; // Function to set admin token
-  setUserToken: (token: string | null) => void;   // Function to set user token
+  userIdLoading: boolean;
 }>( {
   signIn: async () => Promise.resolve(),
   signUp: async () => Promise.resolve(),
   signOut: async () => Promise.resolve(),
   validateToken: async () => Promise.resolve(false),
+  getUserId: async () => Promise.resolve(),
   session: null,
   userId: null,
   isLoading: false,
-  isUserIdLoading: false,
-  adminToken: null,
-  userToken: null,
-  setAdminToken: () => null,
-  setUserToken: () => null,
+  userIdLoading: false,
 });
 
-// This hook can be used to access the user info.
 export function useSession() {
   const value = useContext(AuthContext);
   if (process.env.NODE_ENV !== 'production') {
@@ -40,16 +33,14 @@ export function useSession() {
       throw new Error('useSession must be wrapped in a <SessionProvider />');
     }
   }
-
   return value;
 }
 
 export function SessionProvider({ children }: PropsWithChildren) {
   const [[isLoading, session], setSession] = useStorageState('session');
-  const [[isUserIdLoading, userId], setUserId] = useStorageState('userId');
-  const [authLoading, setAuthLoading] = useState(false); 
-  const [adminToken, setAdminToken] = useState<string | null>(null);
-  const [userToken, setUserToken] = useState<string | null>(null); 
+  const [authLoading, setAuthLoading] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [userIdLoading, setUserIdLoading] = useState(false); 
   const router = useRouter();
 
   const signIn = async (username: string, password: string) => {
@@ -61,22 +52,15 @@ export function SessionProvider({ children }: PropsWithChildren) {
       });
       
       const token = response.data.admin_token || response.data.user_token;
-      const user_id = response.data.user.id;
 
       if (token) {
         setSession(token);
-        setUserId(user_id);
-
-        setAdminToken(response.data.admin_token);
-        setUserToken(response.data.user_token);
-        router.push('/');  
+        router.replace("/");
       } else {
         throw new Error('No valid token found in the response');
       }
     } catch (error) {
-      // Check if it's an Axios error
       if (axios.isAxiosError(error)) {
-        // Adjust to extract the "error" field from the response
         const errorMessage = error.response?.data?.error || 'Failed to sign in';
         throw new Error(errorMessage);
       } else if (error instanceof Error) {
@@ -109,7 +93,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
       if(response.status === 200 || response.status === 201) {
         await signIn(username, password);
       }
-
+      
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const errorMessage = error.response?.data?.error || 'Failed to register';
@@ -135,7 +119,6 @@ export function SessionProvider({ children }: PropsWithChildren) {
 
       console.log('Logout Response:', response.data);
 
-      // Clear session
       setSession(null);
       setUserId(null);
       router.push('/sign-in');  
@@ -162,6 +145,31 @@ export function SessionProvider({ children }: PropsWithChildren) {
     }
   };
 
+  const getUserId = async () => {
+    if (!session){
+      return;
+    }
+    setUserIdLoading(true);
+
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}validate-token`,
+        {
+          headers: {
+            Authorization: `Bearer ${session}`,
+          },
+        }
+      );
+      setUserId(response.data.user.id.toString());
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error("Axios Error:", error.response?.data);
+      }
+    } finally {
+      setUserIdLoading(false);
+    }
+  }
+
   return (
     <AuthContext.Provider
     value={{
@@ -169,14 +177,11 @@ export function SessionProvider({ children }: PropsWithChildren) {
       signUp,
       signOut,
       validateToken,
-      session,
+      getUserId,
       userId,
+      session,
       isLoading: isLoading || authLoading,
-      isUserIdLoading: isUserIdLoading || authLoading,
-      adminToken,
-      userToken,
-      setAdminToken,
-      setUserToken,
+      userIdLoading,
       }}>
       {children}
     </AuthContext.Provider>

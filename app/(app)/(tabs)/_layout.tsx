@@ -9,21 +9,19 @@ import { API_BASE_URL } from "@/constants/Api";
 import { useEffect, useState } from "react";
 
 export default function AppLayout() {
-  const { validateToken, session, isLoading } = useSession();
+  const {  session, isLoading } = useSession();
   const colorScheme = useColorScheme();
   const theme = colorScheme === "dark" ? Colors.dark : Colors.light;
   const [validToken, setValidToken] = useState(false);
   const [isTokenValidating, setIsTokenValidating] = useState(true); // New state for token validation
 
   useEffect(() => {
-    if (session) {
-      fetchData();
-    } else {
-      setIsTokenValidating(false); // No session, stop validating
+    if (!isLoading && session) {
+      validateToken();
     }
-  }, []);
+  }, [isLoading, session]);
 
-  const fetchData = async () => {
+  const validateToken = async () => {
     try {
       const response = await axios.get(
         `${API_BASE_URL}validate-token`,
@@ -54,7 +52,6 @@ export default function AppLayout() {
     );
   }
 
-  // Redirect to landing page if no valid token is found
   if (!session || !validToken) {
     return <Redirect href="../landing" />;
   }

@@ -29,6 +29,7 @@ interface BookType {
   publicationDate: string;
   totalAmount: number;
   currentAmount: number;
+  image: string | null;
   genres: Genre[];
 }
 
@@ -41,16 +42,15 @@ const Search: React.FC = () => {
   const [search, setSearch] = useState<string>("");
   const [submittedSearch, setSubmittedSearch] = useState<string>("");
   const [refreshing, setRefreshing] = useState<boolean>(false);
-  const { query } = useGlobalSearchParams(); // Access query param from URL
+  const { query } = useGlobalSearchParams();
 
   useEffect(() => {
-    //only check after redirect from index
     if(query){
       setSubmittedSearch(query.toString());
       router.replace("/search");
     }
     fetchBooks();
-    setSearch(""); // Clear the input field after the search is submitted
+    setSearch(""); 
   }, [submittedSearch,  query]);
 
   const fetchBooks = async () => {
@@ -91,7 +91,7 @@ const Search: React.FC = () => {
   // Define how each book item will be rendered
   const renderBook = ({ item }: { item: BookType }) => (
     <View style={styles.bookItem}>
-      <Book title={item.title || ""} author={item.author || ""} bookId={item.id || 0} />
+      <Book title={item.title || ""} author={item.author || ""} bookId={item.id || 0} imagePath={item.image || ""}/> 
     </View>
   );
 
@@ -127,11 +127,11 @@ const Search: React.FC = () => {
         </View>
       ) : (
         <FlatList
-          data={books} // Provide the list of books
-          renderItem={renderBook} // Render each book item
-          keyExtractor={(item) => item.id.toString()} // Use book id as key
-          numColumns={2} // Display two items per row
-          contentContainerStyle={styles.bookContainer} // Apply styles to the list
+          data={books} 
+          renderItem={renderBook} 
+          keyExtractor={(item) => item.id.toString()} 
+          numColumns={2} 
+          contentContainerStyle={styles.bookContainer}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }

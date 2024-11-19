@@ -19,6 +19,7 @@ interface Book {
   publicationDate: string;
   totalAmount: number;
   currentAmount: number;
+  image: string | null;
   genres: Genre[];
 }
 
@@ -31,26 +32,24 @@ interface Loan {
 
 
 export default function Reads() {
-  const { signOut, session, userId } = useSession();
+  const { signOut, session, userId, getUserId } = useSession();
   const colorScheme = useColorScheme();
   const theme = colorScheme === "dark" ? Colors.dark : Colors.light;
   const [loading, setLoading] = useState<boolean>(false);
   const [loans, setLoans] = useState<Loan[]>([]);
-  const [isUserIdValid, setIsUserIdValid] = useState<boolean>(false);
 
   useEffect(() => {
-    if (userId && typeof userId === "number" && userId > 0) {
-      setIsUserIdValid(true);
-    } else {
-      setIsUserIdValid(false);
+    if (!userId) {
+      getUserId();
     }
-  }, [userId]);
+  }, [userId, getUserId]);
 
   useEffect(() => {
-    if(isUserIdValid){
+    if (userId) {
       fetchBooks();
     }
-  }, [isUserIdValid]);
+
+  }, []);
 
   const fetchBooks = async () => {
     setLoading(true);
@@ -82,6 +81,7 @@ export default function Reads() {
       author={item.book.author || "Author"}
       key={item.book.id}
       bookId={item.book.id || 0}
+      imagePath={item.book.image || ""}
     />
   );
 

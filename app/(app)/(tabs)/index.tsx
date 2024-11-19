@@ -21,6 +21,7 @@ interface Book {
   publicationDate: string;
   totalAmount: number;
   currentAmount: number;
+  image: string | null;
   genres: Genre[];
 }
 
@@ -32,19 +33,15 @@ interface Loan {
 }
 
 export default function Index() {
-  const { session, userId } = useSession();
+  const { session, userId, getUserId } = useSession();
   const colorScheme = useColorScheme();
   const theme = colorScheme === "dark" ? Colors.dark : Colors.light;
-
   const [newBooks, setNewBooks] = useState<Book[]>([]);
   const [loans, setLoans] = useState<Loan[]>([]);
   const [loadingNew, setLoadingNew] = useState<boolean>(true);
   const [loadingLoan, setLoadingLoan] = useState<boolean>(true);
-  const [isUserIdValid, setIsUserIdValid] = useState<boolean>(false);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [search, setSearch] = useState<string>("");
-
-
   const handleSearchSubmit = () => {
     if (search) {
       router.push(`/search?query=${search}`);
@@ -52,26 +49,19 @@ export default function Index() {
     }
   };
 
-  
+  useEffect(() => {
+    if (!userId) {
+      getUserId();
+    }
+  }, [userId, getUserId]);
+
 
   useEffect(() => {
-    if (userId && typeof userId === "number" && userId > 0) {
-      setIsUserIdValid(true);
-    } else {
-      setIsUserIdValid(false);
+    if (userId) {
+      fetchLatestBooks();
+      fetchCurrentLoans();
     }
   }, [userId]);
-
-  useEffect(() => {
-    fetchData(); // Fetch data on mount
-  }, [isUserIdValid]);
-
-  const fetchData = async () => {
-    await fetchLatestBooks();
-    if (isUserIdValid) {
-      await fetchCurrentLoans();
-    }
-  };
 
   const fetchLatestBooks = async () => {
     setLoadingNew(true);
@@ -82,13 +72,11 @@ export default function Index() {
         },
       });
 
-
-
-      setNewBooks(response.data.data); // Use `response.data.data` to get the array of books
+      setNewBooks(response.data.data); 
     } catch (error) {
       console.error("Error fetching latest books:", error);
     } finally {
-      setLoadingNew(false); // Ensure loading state is reset in finally block
+      setLoadingNew(false);
     }
   };
 
@@ -115,7 +103,8 @@ export default function Index() {
 
   const onRefresh = async () => {
     setRefreshing(true); // Set refreshing to true
-    await fetchData(); // Fetch data again
+    await fetchLatestBooks();
+    await fetchCurrentLoans();
     setRefreshing(false); // Reset refreshing state
   };
 
@@ -181,6 +170,7 @@ export default function Index() {
                 author={book.author || ""}
                 key={index}
                 bookId={book.id || 0}
+                imagePath={book.image || ""}
               />
             ))
           ) : (
@@ -203,6 +193,7 @@ export default function Index() {
                 author={loan.book.author || "Author"}
                 key={index}
                 bookId={loan.book.id || 0}
+                imagePath={loan.book.image || ""}
               />
             ))
           ) : (
